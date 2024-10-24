@@ -30,7 +30,7 @@ def apply_slerp_to_channels(HB1, HB2, num_interpolations=10):
         interpolated_values.append(interpolated)
     return np.array(interpolated_values)
 
-def load_subject_data(subject_folder, sfreq=100, epoch_size=7680, num_interpolations=10):
+def load_subject_data(subject_folder, sfreq=256, epoch_size=7680, num_interpolations=10):
     eeg_dir = os.path.join(base_dir, subject_folder, 'eeg')
     edf_file = os.path.join(eeg_dir, f'{subject_folder}_task-Sleep_acq-headband_eeg.edf')
     tsv_file = os.path.join(eeg_dir, f'{subject_folder}_task-Sleep_acq-psg_events.tsv')
