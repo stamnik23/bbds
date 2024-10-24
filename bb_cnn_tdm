@@ -77,21 +77,27 @@ def load_all_subjects(base_dir):
 def create_time_distributed_model(input_shape):
     model = models.Sequential()
     
-    model.add(layers.Conv1D(16, kernel_size=3, activation='relu', padding='same', input_shape=input_shape))
-    model.add(layers.Conv1D(16, kernel_size=3, activation='relu', padding='same'))
+    # First set of layers with 64 filters, kernel size 5
+    model.add(layers.Conv1D(64, kernel_size=5, activation='relu', padding='same', input_shape=input_shape))
+    model.add(layers.Conv1D(64, kernel_size=5, activation='relu', padding='same'))
     model.add(layers.MaxPooling1D(pool_size=2))
     model.add(layers.SpatialDropout1D(rate=0.01))
-
-    model.add(layers.Conv1D(32, kernel_size=3, activation='relu', padding='same'))
-    model.add(layers.Conv1D(32, kernel_size=3, activation='relu', padding='same'))
+    
+    # Second set of layers with 128 filters, kernel size 3
+    model.add(layers.Conv1D(128, kernel_size=3, activation='relu', padding='same'))
+    model.add(layers.Conv1D(128, kernel_size=3, activation='relu', padding='same'))
     model.add(layers.MaxPooling1D(pool_size=2))
     model.add(layers.SpatialDropout1D(rate=0.01))
-
+    
+    # Third set of layers with 256 filters, kernel size 3
     model.add(layers.Conv1D(256, kernel_size=3, activation='relu', padding='same'))
     model.add(layers.Conv1D(256, kernel_size=3, activation='relu', padding='same'))
     model.add(layers.MaxPooling1D(pool_size=2))
     model.add(layers.SpatialDropout1D(rate=0.01))
 
+    # Dense layer with 64 units, but do not flatten
+    model.add(layers.Conv1D(64, kernel_size=1, activation='relu'))  # This maintains the sequence structure
+    
     return model
 
 def create_global_model(input_shape, output_classes=5):
@@ -107,7 +113,7 @@ def create_global_model(input_shape, output_classes=5):
 
 def create_full_model(input_shape, num_epochs, output_classes=5):
     time_distributed_model = create_time_distributed_model(input_shape)
-    global_model = create_global_model((input_shape[0] // 8, 256), output_classes)  
+    global_model = create_global_model((input_shape[0] // 8, 64), output_classes)  # Adjust to accept 64 features
 
     model_input = layers.Input(shape=(input_shape[0], 1))
     x = time_distributed_model(model_input)
@@ -115,7 +121,7 @@ def create_full_model(input_shape, num_epochs, output_classes=5):
 
     full_model = models.Model(inputs=model_input, outputs=outputs)
 
-    optimizer = Adam(learning_rate=1e-5)
+    optimizer = Adam(learning_rate=1e-4)
     full_model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
     return full_model
